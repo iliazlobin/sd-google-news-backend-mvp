@@ -6,9 +6,10 @@ import asyncio
 import os
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
+
+from alembic import context
 
 # Alembic Config object
 config = context.config
@@ -23,8 +24,8 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Import the app's declarative Base so autogenerate can see models.
+import google_news.models  # noqa: E402, F401 — ensure all models are imported
 from google_news.database import Base  # noqa: E402
-import google_news.models  # noqa: E402 — ensure all models are imported
 
 target_metadata = Base.metadata
 

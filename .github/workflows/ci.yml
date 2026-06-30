@@ -5,10 +5,18 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    - cron: "17 13 * * *"
+
+permissions:
+  contents: read
 
 jobs:
   unit:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ci-unit-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v4
 
@@ -23,3 +31,43 @@ jobs:
 
       - name: Run unit tests
         run: pytest tests/unit/ -v
+
+  e2e:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ci-e2e-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install docker compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose-plugin
+
+      - name: Build and start stack
+        run: |
+          docker compose up -d --build
+          # Wait for health
+          for i in $(seq 1 30); do
+            if docker compose exec -T app python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')" 2>/dev/null; then
+              echo "App healthy"
+              break
+            fi
+            echo "Waiting for app... ($i/30)"
+            sleep 2
+          done
+
+      - name: Run migrations
+        run: docker compose exec -T app alembic upgrade head
+
+      - name: Run acceptance tests
+        env:
+          API_BASE_URL: http://localhost:8000
+        run: |
+          pip install httpx pytest
+          pytest verify/acceptance/ -v
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

@@ -5,9 +5,9 @@ via HTTP at API_BASE_URL.
 """
 
 import os
-import pytest
-import httpx
 
+import httpx
+import pytest
 
 API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:8000")
 
@@ -120,9 +120,9 @@ def known_user(client):
 
 def assert_json_200(r, expected_status=200):
     """Assert status and return parsed JSON."""
-    assert r.status_code == expected_status, (
-        f"Expected {expected_status}, got {r.status_code}: {r.text}"
-    )
+    assert (
+        r.status_code == expected_status
+    ), f"Expected {expected_status}, got {r.status_code}: {r.text}"
     return r.json()
 
 

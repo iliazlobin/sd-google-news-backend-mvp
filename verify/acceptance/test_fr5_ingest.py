@@ -63,18 +63,28 @@ def test_ingest_article_duplicate_url_409(client):
 def test_ingest_article_missing_required_fields_422(client):
     """Missing required fields returns 422."""
     # Missing headline
-    assert_422(client.post("/v1/articles", json={
-        "url": f"https://bad.com/article-{uuid.uuid4()}.html",
-        "publisher_domain": "bad.com",
-        "published_at": "2026-06-29T10:00:00Z",
-    }))
+    assert_422(
+        client.post(
+            "/v1/articles",
+            json={
+                "url": f"https://bad.com/article-{uuid.uuid4()}.html",
+                "publisher_domain": "bad.com",
+                "published_at": "2026-06-29T10:00:00Z",
+            },
+        )
+    )
 
     # Missing url
-    assert_422(client.post("/v1/articles", json={
-        "headline": "No URL article",
-        "publisher_domain": "bad.com",
-        "published_at": "2026-06-29T10:00:00Z",
-    }))
+    assert_422(
+        client.post(
+            "/v1/articles",
+            json={
+                "headline": "No URL article",
+                "publisher_domain": "bad.com",
+                "published_at": "2026-06-29T10:00:00Z",
+            },
+        )
+    )
 
 
 def test_ingest_article_minimal_fields(client):

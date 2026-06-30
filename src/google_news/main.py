@@ -8,13 +8,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from google_news.routers import (
-    health_router,
-    feed_router,
-    stories_router,
-    search_router,
     articles_router,
-    users_router,
     events_router,
+    feed_router,
+    health_router,
+    search_router,
+    stories_router,
+    users_router,
 )
 
 

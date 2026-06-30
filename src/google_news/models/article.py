@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 
 import sqlalchemy as sa
-from sqlalchemy import Index, Text, UniqueConstraint, func, text
+from sqlalchemy import Text, UniqueConstraint, func, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -39,11 +39,4 @@ class Article(Base):
         sa.DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
-    __table_args__ = (
-        UniqueConstraint("url", name="uq_articles_url"),
-        Index(
-            "ix_articles_fts",
-            func.to_tsvector("english", headline + " " + func.coalesce(snippet, "")),
-            postgresql_using="gin",
-        ),
-    )
+    __table_args__ = (UniqueConstraint("url", name="uq_articles_url"),)

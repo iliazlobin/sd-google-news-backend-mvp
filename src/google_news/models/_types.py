@@ -11,6 +11,7 @@ class StringArray(TypeDecorator):
 
     Selection is automatic based on the engine dialect at DDL-compile time.
     """
+
     impl = sa.JSON
     cache_ok = True
 

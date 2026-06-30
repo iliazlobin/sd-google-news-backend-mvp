@@ -26,12 +26,8 @@ class Story(Base):
     article_count: Mapped[int] = mapped_column(sa.Integer, nullable=False, default=1)
     top_sources: Mapped[list[str]] = mapped_column(StringArray, nullable=False, default=list)
     category: Mapped[str] = mapped_column(sa.Text, nullable=False, default="")
-    first_published_at: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True), nullable=False
-    )
-    last_updated_at: Mapped[datetime] = mapped_column(
-        sa.DateTime(timezone=True), nullable=False
-    )
+    first_published_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    last_updated_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
     )

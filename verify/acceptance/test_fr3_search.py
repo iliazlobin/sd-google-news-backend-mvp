@@ -5,14 +5,12 @@ AC-3: Full-text search. Time-range filter narrows results. No match → empty li
 Missing q → 422.
 """
 
-from verify.acceptance.conftest import assert_json_200, assert_422
+from verify.acceptance.conftest import assert_422, assert_json_200
 
 
 def test_search_returns_matching_articles(client, seed_articles):
     """Search for 'earthquake' returns relevant articles."""
-    results = assert_json_200(
-        client.get("/v1/search?q=earthquake&limit=10")
-    )
+    results = assert_json_200(client.get("/v1/search?q=earthquake&limit=10"))
 
     assert "results" in results
     assert isinstance(results["results"], list)
@@ -43,16 +41,14 @@ def test_search_time_range_filter(client, seed_articles):
     )
     narrow_count = narrow.get("total", len(narrow["results"]))
 
-    assert narrow_count <= wide_count, (
-        f"Narrow time range ({narrow_count}) should not exceed wide ({wide_count})"
-    )
+    assert (
+        narrow_count <= wide_count
+    ), f"Narrow time range ({narrow_count}) should not exceed wide ({wide_count})"
 
 
 def test_search_no_match_returns_empty(client):
     """Search with no matching query returns empty results, not 404."""
-    results = assert_json_200(
-        client.get("/v1/search?q=xyznonexistentfoobar12345&limit=10")
-    )
+    results = assert_json_200(client.get("/v1/search?q=xyznonexistentfoobar12345&limit=10"))
     assert "results" in results
     assert results["results"] == []
     assert results.get("total", 0) == 0
@@ -66,7 +62,5 @@ def test_search_missing_query_422(client):
 
 def test_search_respects_limit(client, seed_articles):
     """Search honors the limit parameter."""
-    results = assert_json_200(
-        client.get("/v1/search?q=chip&limit=1")
-    )
+    results = assert_json_200(client.get("/v1/search?q=chip&limit=1"))
     assert len(results["results"]) <= 1

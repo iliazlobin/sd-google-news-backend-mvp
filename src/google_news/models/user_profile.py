@@ -22,16 +22,10 @@ class UserProfile(Base):
         server_default=sa.text("gen_random_uuid()"),
         default=uuid.uuid4,
     )
-    followed_topics: Mapped[list[str]] = mapped_column(
-        StringArray, nullable=False, default=list
-    )
-    followed_sources: Mapped[list[str]] = mapped_column(
-        StringArray, nullable=False, default=list
-    )
+    followed_topics: Mapped[list[str]] = mapped_column(StringArray, nullable=False, default=list)
+    followed_sources: Mapped[list[str]] = mapped_column(StringArray, nullable=False, default=list)
     region: Mapped[str] = mapped_column(sa.Text, nullable=False, default="us")
-    language_prefs: Mapped[list[str]] = mapped_column(
-        StringArray, nullable=False, default=list
-    )
+    language_prefs: Mapped[list[str]] = mapped_column(StringArray, nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False
     )

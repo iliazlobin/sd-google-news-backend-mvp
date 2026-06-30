@@ -12,12 +12,8 @@ from verify.acceptance.conftest import assert_202, assert_422, assert_json_200
 def test_event_accepted_202(client, seed_articles):
     """Posting an event returns 202 Accepted with event_id."""
     # Pick an article_id from seed data
-    article_ids = [
-        a.get("article_id") for a in seed_articles if a.get("article_id")
-    ]
-    story_ids = [
-        a.get("story_id") for a in seed_articles if a.get("story_id")
-    ]
+    article_ids = [a.get("article_id") for a in seed_articles if a.get("article_id")]
+    story_ids = [a.get("story_id") for a in seed_articles if a.get("story_id")]
     assert article_ids, "Need at least one article from seed data"
 
     user_id = "00000000-0000-0000-0000-000000000001"
@@ -35,33 +31,30 @@ def test_event_accepted_202(client, seed_articles):
 
 def test_event_all_types_accepted(client, seed_articles):
     """All valid event types are accepted."""
-    article_ids = [
-        a.get("article_id") for a in seed_articles if a.get("article_id")
-    ]
-    story_ids = [
-        a.get("story_id") for a in seed_articles if a.get("story_id")
-    ]
+    article_ids = [a.get("article_id") for a in seed_articles if a.get("article_id")]
+    story_ids = [a.get("story_id") for a in seed_articles if a.get("story_id")]
     assert article_ids, "Need at least one article"
 
     user_id = "00000000-0000-0000-0000-00000000e002"
     for event_type in ("impression", "click", "long_dwell", "dismiss"):
-        resp = assert_202(client.post("/v1/events", json={
-            "user_id": user_id,
-            "article_id": article_ids[0],
-            "story_id": story_ids[0] if story_ids else article_ids[0],
-            "event_type": event_type,
-        }))
+        resp = assert_202(
+            client.post(
+                "/v1/events",
+                json={
+                    "user_id": user_id,
+                    "article_id": article_ids[0],
+                    "story_id": story_ids[0] if story_ids else article_ids[0],
+                    "event_type": event_type,
+                },
+            )
+        )
         assert "event_id" in resp
 
 
 def test_event_duplicate_accepted(client, seed_articles):
     """Duplicate events are accepted (fire-and-forget, each gets a new event_id)."""
-    article_ids = [
-        a.get("article_id") for a in seed_articles if a.get("article_id")
-    ]
-    story_ids = [
-        a.get("story_id") for a in seed_articles if a.get("story_id")
-    ]
+    article_ids = [a.get("article_id") for a in seed_articles if a.get("article_id")]
+    story_ids = [a.get("story_id") for a in seed_articles if a.get("story_id")]
     assert article_ids, "Need at least one article"
 
     user_id = "00000000-0000-0000-0000-00000000e003"
@@ -81,39 +74,48 @@ def test_event_duplicate_accepted(client, seed_articles):
 
 def test_event_invalid_type_422(client, seed_articles):
     """Invalid event_type returns 422."""
-    article_ids = [
-        a.get("article_id") for a in seed_articles if a.get("article_id")
-    ]
-    story_ids = [
-        a.get("story_id") for a in seed_articles if a.get("story_id")
-    ]
+    article_ids = [a.get("article_id") for a in seed_articles if a.get("article_id")]
+    story_ids = [a.get("story_id") for a in seed_articles if a.get("story_id")]
     assert article_ids, "Need at least one article"
 
-    assert_422(client.post("/v1/events", json={
-        "user_id": "00000000-0000-0000-0000-00000000e004",
-        "article_id": article_ids[0],
-        "story_id": story_ids[0] if story_ids else article_ids[0],
-        "event_type": "invalid_type",
-    }))
+    assert_422(
+        client.post(
+            "/v1/events",
+            json={
+                "user_id": "00000000-0000-0000-0000-00000000e004",
+                "article_id": article_ids[0],
+                "story_id": story_ids[0] if story_ids else article_ids[0],
+                "event_type": "invalid_type",
+            },
+        )
+    )
 
 
 def test_event_missing_required_fields_422(client, seed_articles):
     """Missing required fields returns 422."""
-    article_ids = [
-        a.get("article_id") for a in seed_articles if a.get("article_id")
-    ]
+    article_ids = [a.get("article_id") for a in seed_articles if a.get("article_id")]
     assert article_ids, "Need at least one article"
 
     # Missing user_id
-    assert_422(client.post("/v1/events", json={
-        "article_id": article_ids[0],
-        "story_id": article_ids[0],
-        "event_type": "click",
-    }))
+    assert_422(
+        client.post(
+            "/v1/events",
+            json={
+                "article_id": article_ids[0],
+                "story_id": article_ids[0],
+                "event_type": "click",
+            },
+        )
+    )
 
     # Missing event_type
-    assert_422(client.post("/v1/events", json={
-        "user_id": "00000000-0000-0000-0000-00000000e005",
-        "article_id": article_ids[0],
-        "story_id": article_ids[0],
-    }))
+    assert_422(
+        client.post(
+            "/v1/events",
+            json={
+                "user_id": "00000000-0000-0000-0000-00000000e005",
+                "article_id": article_ids[0],
+                "story_id": article_ids[0],
+            },
+        )
+    )

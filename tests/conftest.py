@@ -1,4 +1,8 @@
-"""Test fixtures: async HTTP client, test database."""
+"""Test fixtures: async HTTP client, test database.
+
+White-box tests use an in-memory SQLite database via pytest fixtures.
+Functional tests use the same in-process ASGITransport with DB overridden.
+"""
 
 from __future__ import annotations
 
@@ -9,17 +13,8 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from google_news.database import Base
+from google_news.database import Base, get_db
 from google_news.main import create_app
-
-
-@pytest_asyncio.fixture
-async def client() -> AsyncGenerator[AsyncClient, None]:
-    """An httpx AsyncClient that talks directly to the FastAPI app (no network)."""
-    app = create_app()
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        yield ac
 
 
 @pytest.fixture(scope="session")
@@ -27,7 +22,7 @@ def anyio_backend() -> str:
     return "asyncio"
 
 
-# ── White-box test database fixtures ──────────────────────────────────────
+# ── Test database fixtures ────────────────────────────────────────────────
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -57,3 +52,37 @@ async def db(test_engine) -> AsyncGenerator[AsyncSession, None]:
             async with session_factory() as session:
                 yield session
             await trans.rollback()
+
+
+# ── HTTP client fixture ───────────────────────────────────────────────────
+
+
+@pytest_asyncio.fixture
+async def client(
+    test_engine,
+    db: AsyncSession,
+) -> AsyncGenerator[AsyncClient, None]:
+    """An httpx AsyncClient that talks directly to the FastAPI app (no network).
+
+    Overrides get_db to use the test database session so endpoint handlers
+    share the same per-test transaction.
+    """
+    app = create_app()
+
+    # Capture the session in a closure so the override yields it.
+    # Use a list to work around the closure binding issue.
+    _session = db
+
+    async def override_get_db():
+        yield _session
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test",
+    ) as ac:
+        yield ac
+
+    app.dependency_overrides.clear()
