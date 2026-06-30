@@ -15,5 +15,6 @@ dist/
 *.log
 *.rdb
 dump.rdb
+*.db
 verify/logs/
 verify/state/

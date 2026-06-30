@@ -1,0 +1,53 @@
+# Usage:
+#   cp .env.example .env          # edit APP_PORT if needed
+#   docker compose up -d          # start
+#   docker compose run --rm app alembic upgrade head   # first-run migration
+#   curl localhost:${APP_PORT:-8010}/healthz           # verify
+#   docker compose down           # teardown
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: google_news
+      POSTGRES_PASSWORD: google_news
+      POSTGRES_DB: google_news
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U google_news -d google_news"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    ports:
+      - "${APP_PORT:-8010}:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://google_news:google_news@db:5432/google_news
+      REDIS_URL: redis://redis:6379/0
+      HOST: "0.0.0.0"
+      APP_PORT: "8000"
+      LOG_LEVEL: info
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:
