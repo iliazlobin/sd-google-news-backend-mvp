@@ -5,6 +5,15 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    - cron: "17 13 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: functional-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   functional:
@@ -56,4 +65,4 @@ jobs:
         env:
           DATABASE_URL: postgresql+asyncpg://google_news:google_news@localhost:5432/google_news
           REDIS_URL: redis://localhost:6379/0
-        run: pytest tests/functional/ -v || true
+        run: pytest tests/functional/ -v
