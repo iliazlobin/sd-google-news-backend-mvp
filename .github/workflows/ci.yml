@@ -40,21 +40,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install docker compose
+      - name: Source manifest and bring up stack
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose-plugin
-
-      - name: Build and start stack
-        run: |
-          docker compose up -d --build
-          # Wait for health
+          set -a
+          source verify/manifest.env
+          set +a
+          eval "$UP"
+          # Wait for healthy
           for i in $(seq 1 30); do
-            if docker compose exec -T app python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')" 2>/dev/null; then
-              echo "App healthy"
+            STATUS=$(eval "$READY" 2>/dev/null || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "App healthy (HTTP $STATUS)"
               break
             fi
-            echo "Waiting for app... ($i/30)"
+            echo "Waiting for app... attempt $i/30 (HTTP $STATUS)"
             sleep 2
           done
 
@@ -63,11 +62,15 @@ jobs:
 
       - name: Run acceptance tests
         env:
-          API_BASE_URL: http://localhost:8000
+          API_BASE_URL: http://localhost:8010
         run: |
-          pip install httpx pytest
+          python -m pip install httpx pytest
           pytest verify/acceptance/ -v
 
       - name: Tear down
         if: always()
-        run: docker compose down -v
+        run: |
+          set -a
+          source verify/manifest.env
+          set +a
+          eval "$DOWN"
