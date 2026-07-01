@@ -16,6 +16,7 @@ API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:8000")
 # All seed timestamps are computed relative to now so they never go stale
 # (the feed has a 48h window; hardcoded dates eventually fall outside it).
 
+
 def _rel(hours_ago: float) -> str:
     """Return an ISO-8601 timestamp `hours_ago` hours before now."""
     dt = datetime.now(UTC) - timedelta(hours=hours_ago)
