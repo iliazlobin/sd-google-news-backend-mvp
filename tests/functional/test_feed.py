@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime
 
 import pytest
 from httpx import AsyncClient
@@ -53,7 +54,7 @@ async def test_feed_returns_stories_when_data_exists(client: AsyncClient):
             "headline": "AI startup raises millions in funding",
             "snippet": "A new AI startup has secured significant funding.",
             "publisher_domain": "test.com",
-            "published_at": "2026-06-29T10:00:00Z",
+            "published_at": datetime.now(UTC).isoformat(),
             "source_authority": 0.9,
         },
     )
