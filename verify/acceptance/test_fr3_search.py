@@ -5,6 +5,8 @@ AC-3: Full-text search. Time-range filter narrows results. No match → empty li
 Missing q → 422.
 """
 
+from datetime import UTC, datetime, timedelta
+
 from verify.acceptance.conftest import assert_422, assert_json_200
 
 
@@ -25,19 +27,19 @@ def test_search_returns_matching_articles(client, seed_articles):
 
 def test_search_time_range_filter(client, seed_articles):
     """Time-range filter narrows results."""
-    # Wide range should find the earthquake articles
-    wide = assert_json_200(
-        client.get(
-            "/v1/search?q=earthquake&from=2026-06-29T00:00:00Z&to=2026-06-30T00:00:00Z&limit=10"
-        )
-    )
+    now = datetime.now(UTC)
+
+    # Wide range covering the last 6 hours — should find recent earthquake articles
+    _from = (now - timedelta(hours=6)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    _to = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    wide = assert_json_200(client.get(f"/v1/search?q=earthquake&from={_from}&to={_to}&limit=10"))
     wide_count = wide.get("total", len(wide["results"]))
 
-    # Narrow range before the article was published
+    # Narrow range before any seed articles exist (10-14 days ago)
+    from_old = (now - timedelta(days=14)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    to_old = (now - timedelta(days=10)).strftime("%Y-%m-%dT%H:%M:%SZ")
     narrow = assert_json_200(
-        client.get(
-            "/v1/search?q=earthquake&from=2026-06-28T00:00:00Z&to=2026-06-28T06:00:00Z&limit=10"
-        )
+        client.get(f"/v1/search?q=earthquake&from={from_old}&to={to_old}&limit=10")
     )
     narrow_count = narrow.get("total", len(narrow["results"]))
 

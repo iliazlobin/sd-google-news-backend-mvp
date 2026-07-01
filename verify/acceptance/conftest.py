@@ -5,11 +5,22 @@ via HTTP at API_BASE_URL.
 """
 
 import os
+from datetime import UTC, datetime, timedelta
 
 import httpx
 import pytest
 
 API_BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:8000")
+
+# ── Dynamic timestamp helpers ───────────────────────────────────────
+# All seed timestamps are computed relative to now so they never go stale
+# (the feed has a 48h window; hardcoded dates eventually fall outside it).
+
+
+def _rel(hours_ago: float) -> str:
+    """Return an ISO-8601 timestamp `hours_ago` hours before now."""
+    dt = datetime.now(UTC) - timedelta(hours=hours_ago)
+    return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 @pytest.fixture(scope="session")
@@ -27,7 +38,10 @@ def client(base_url: str):
 @pytest.fixture
 def seed_articles(client):
     """Ingest a batch of articles and return their response data.
-    Returns a list of (article_id, story_id, headline, published_at, source_authority, publisher_domain).
+
+    Timestamps are relative to now so the feed 48h window never expires.
+    Returns a list of (article_id, story_id, headline, published_at,
+    source_authority, publisher_domain).
     """
     articles_data = [
         {
@@ -35,7 +49,7 @@ def seed_articles(client):
             "headline": "Major earthquake hits Turkey, thousands displaced",
             "snippet": "A 7.2 magnitude earthquake struck eastern Turkey early Monday, collapsing buildings and displacing thousands.",
             "publisher_domain": "reuters.com",
-            "published_at": "2026-06-29T06:00:00Z",
+            "published_at": _rel(2.0),
             "language": "en",
             "region": "world",
             "source_authority": 0.95,
@@ -45,7 +59,7 @@ def seed_articles(client):
             "headline": "Turkey earthquake: rescue efforts underway as death toll rises",
             "snippet": "Rescue teams are working through the night in eastern Turkey after a devastating 7.2 magnitude earthquake.",
             "publisher_domain": "bbc.com",
-            "published_at": "2026-06-29T07:30:00Z",
+            "published_at": _rel(1.5),
             "language": "en",
             "region": "world",
             "source_authority": 0.90,
@@ -55,7 +69,7 @@ def seed_articles(client):
             "headline": "New AI chip startup raises $500M in Series C",
             "snippet": "A stealth-mode AI chip startup announced a $500M Series C round led by major VCs, aiming to compete with NVIDIA.",
             "publisher_domain": "techcrunch.com",
-            "published_at": "2026-06-29T08:00:00Z",
+            "published_at": _rel(1.0),
             "language": "en",
             "region": "us",
             "source_authority": 0.80,
@@ -65,7 +79,7 @@ def seed_articles(client):
             "headline": "This new AI chip company just raised $500M to challenge NVIDIA",
             "snippet": "The AI hardware space is heating up as a new challenger raises half a billion dollars to take on the GPU giant.",
             "publisher_domain": "theverge.com",
-            "published_at": "2026-06-29T08:30:00Z",
+            "published_at": _rel(0.5),
             "language": "en",
             "region": "us",
             "source_authority": 0.75,
@@ -75,7 +89,7 @@ def seed_articles(client):
             "headline": "World Cup final ends in dramatic penalty shootout",
             "snippet": "The 2026 World Cup final went to penalties after a 2-2 draw, with the underdogs claiming their first title.",
             "publisher_domain": "espn.com",
-            "published_at": "2026-06-28T22:00:00Z",
+            "published_at": _rel(3.0),
             "language": "en",
             "region": "us",
             "source_authority": 0.85,
@@ -85,7 +99,7 @@ def seed_articles(client):
             "headline": "Yesterday's minor local event",
             "snippet": "A small community event took place yesterday with minimal turnout.",
             "publisher_domain": "old-news.com",
-            "published_at": "2026-06-27T12:00:00Z",
+            "published_at": _rel(25.0),
             "language": "en",
             "region": "local",
             "source_authority": 0.20,
