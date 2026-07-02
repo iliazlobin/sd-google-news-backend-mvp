@@ -203,6 +203,21 @@ Each functional requirement maps to a black-box acceptance test in `verify/accep
 | FR-7 — Health check | `test_fr7_healthz.py` | `GET /healthz` returns 200 with `status: "ok"` |
 | FR-8 — Article dedup & clustering | `test_fr8_clustering.py` | Two articles about the same event get the same story_id; unrelated article gets a different story_id |
 
+## Test Scenarios
+
+Functional scenario tests live in `tests/functional/` — 29 white-box tests that exercise each endpoint through the ASGI app with a real database, covering the happy path plus error and edge cases per surface:
+
+| Surface | Test File | Scenarios |
+|---|---|---|
+| Feed | `test_feed.py` | Empty feed for a new user; ranked stories when data exists; unknown user → 404; malformed user_id → 422; `limit` respected |
+| Search | `test_search.py` | Matching articles returned; no-match query → empty results; missing/empty `q` → 422; `limit` respected |
+| Ingest | `test_articles.py` | 201 with article_id + story_id; minimal-fields body accepted; duplicate URL → 409; missing url/required fields → 422 |
+| Stories | `test_stories.py` | Story detail after ingest; article pagination; unknown story → 404 (detail and articles) |
+| Preferences | `test_users.py` | Full and partial update; upsert for a new user; missing/invalid user_id → 422 |
+| Events | `test_events.py` | 202 accepted; all four event types; duplicates accepted (fire-and-forget); invalid type / missing fields → 422 |
+
+Unit tests (`tests/unit/`) cover the ranking formula, clustering thresholds, and service logic in isolation; black-box acceptance tests (`verify/acceptance/`, mapped to FRs above) verify the system end-to-end.
+
 ## Test Results
 
 CI re-runs the full suite on every push to `main`, every pull request, and daily on schedule. The badges below are the live source of truth:
